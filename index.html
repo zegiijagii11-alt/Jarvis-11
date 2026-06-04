@@ -1,1 +1,478 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+<meta name="theme-color" content="#1D9E75"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+<meta name="apple-mobile-web-app-title" content="Тэмдэглэл"/>
+<link rel="manifest" href="manifest.json"/>
+<link rel="apple-touch-icon" href="icon-192.png"/>
+<title>Миний тэмдэглэл</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+:root{
+  --bg:#ffffff;--bg2:#f7f7f5;--bg3:#efefec;
+  --text:#1a1a1a;--text2:#666;--text3:#999;
+  --border:#e5e5e0;--border2:#d0d0c8;
+  --accent:#1D9E75;--accent-light:#E1F5EE;--accent-text:#085041;
+  --danger:#c0392b;--warn-bg:#fff8e1;--warn-text:#7a5800;
+  --radius:10px;--radius-sm:7px;
+}
+@media(prefers-color-scheme:dark){
+  :root{
+    --bg:#1c1c1e;--bg2:#2c2c2e;--bg3:#3a3a3c;
+    --text:#f2f2f7;--text2:#aeaeb2;--text3:#636366;
+    --border:#38383a;--border2:#48484a;
+    --accent:#5DCAA5;--accent-light:#04342C;--accent-text:#9FE1CB;
+  }
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);height:100dvh;display:flex;flex-direction:column;overflow:hidden;}
+.bottom-nav{display:flex;border-top:0.5px solid var(--border);background:var(--bg);padding-bottom:env(safe-area-inset-bottom);}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 0 8px;background:none;border:none;color:var(--text3);font-size:10px;cursor:pointer;transition:color 0.15s;}
+.nav-btn.active{color:var(--accent);}
+.nav-btn svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+.page{display:none;flex:1;flex-direction:column;overflow:hidden;}
+.page.active{display:flex;}
+.page-header{padding:16px 16px 10px;display:flex;align-items:center;justify-content:space-between;border-bottom:0.5px solid var(--border);}
+.page-title{font-size:20px;font-weight:600;}
+.icon-btn{width:36px;height:36px;border-radius:50%;background:var(--bg2);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text);}
+.icon-btn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.search-bar{padding:8px 16px;border-bottom:0.5px solid var(--border);}
+.search-bar input{width:100%;padding:8px 12px;border-radius:var(--radius-sm);border:none;background:var(--bg2);color:var(--text);font-size:14px;}
+.notes-list{flex:1;overflow-y:auto;padding:8px;}
+.note-card{padding:12px 14px;border-radius:var(--radius);background:var(--bg2);margin-bottom:8px;cursor:pointer;border:0.5px solid transparent;}
+.note-card.active{border-color:var(--accent);}
+.note-card-title{font-size:14px;font-weight:500;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.note-card-preview{font-size:12px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.empty-notes{padding:40px 16px;text-align:center;color:var(--text3);font-size:14px;}
+#editor-page .page-header{padding:12px 16px;}
+.back-btn{display:flex;align-items:center;gap:4px;background:none;border:none;color:var(--accent);font-size:15px;cursor:pointer;padding:4px 0;}
+.back-btn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;}
+.editor-title{border:none;outline:none;font-size:20px;font-weight:600;padding:14px 16px 6px;background:transparent;color:var(--text);width:100%;}
+.editor-title::placeholder{color:var(--text3);}
+.editor-body{border:none;outline:none;flex:1;padding:6px 16px 20px;font-size:15px;line-height:1.7;background:transparent;color:var(--text);resize:none;width:100%;}
+.editor-body::placeholder{color:var(--text3);}
+.med-form-card{margin:12px;padding:14px;border-radius:var(--radius);background:var(--bg2);border:0.5px solid var(--border);}
+.med-form-card label{display:block;font-size:12px;color:var(--text2);margin-bottom:4px;margin-top:10px;}
+.med-form-card label:first-child{margin-top:0;}
+.med-form-card input{width:100%;padding:9px 12px;border-radius:var(--radius-sm);border:0.5px solid var(--border2);background:var(--bg);color:var(--text);font-size:14px;}
+.day-pills{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;}
+.dp{padding:5px 10px;border-radius:20px;font-size:12px;cursor:pointer;border:0.5px solid var(--border2);background:var(--bg);color:var(--text2);transition:all 0.12s;}
+.dp.sel{background:var(--accent-light);border-color:var(--accent);color:var(--accent-text);}
+.add-btn{width:100%;margin-top:12px;padding:11px;border-radius:var(--radius-sm);border:none;background:var(--accent);color:#fff;font-size:14px;font-weight:500;cursor:pointer;}
+.med-list{flex:1;overflow-y:auto;padding:0 12px 12px;}
+.med-card{padding:12px 14px;border-radius:var(--radius);background:var(--bg2);border:0.5px solid var(--border);margin-bottom:8px;}
+.med-row{display:flex;align-items:center;gap:10px;}
+.med-dot{width:9px;height:9px;border-radius:50%;background:var(--accent);flex-shrink:0;}
+.med-dot.off{background:var(--text3);}
+.med-info{flex:1;}
+.med-name-txt{font-size:14px;font-weight:500;}
+.med-time-txt{font-size:12px;color:var(--text2);margin-top:2px;}
+.med-repeat-txt{font-size:11px;color:var(--text3);margin-top:3px;}
+.med-actions{display:flex;gap:6px;}
+.sm-btn{width:32px;height:32px;border-radius:8px;border:0.5px solid var(--border2);background:var(--bg);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text2);}
+.sm-btn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.sm-btn.danger{color:var(--danger);}
+.notif-bar{margin:10px 12px 0;padding:10px 12px;border-radius:var(--radius-sm);background:var(--warn-bg);border:0.5px solid #f0c040;display:flex;align-items:center;gap:8px;font-size:12px;color:var(--warn-text);}
+.notif-bar button{padding:5px 10px;border-radius:6px;border:0.5px solid #f0c040;background:transparent;color:var(--warn-text);font-size:12px;cursor:pointer;white-space:nowrap;}
+.notif-ok{background:#e8f5e9;border-color:#66bb6a;color:#2e7d32;}
 
+/* Sleep page */
+.sleep-scroll{flex:1;overflow-y:auto;padding:12px;}
+.sleep-today{background:var(--bg2);border-radius:var(--radius);border:0.5px solid var(--border);padding:16px;margin-bottom:12px;}
+.sleep-today-title{font-size:13px;color:var(--text2);margin-bottom:12px;}
+.sleep-time-row{display:flex;gap:10px;margin-bottom:10px;}
+.sleep-time-block{flex:1;}
+.sleep-time-block label{font-size:11px;color:var(--text3);display:block;margin-bottom:4px;}
+.sleep-time-block input{width:100%;padding:8px 10px;border-radius:var(--radius-sm);border:0.5px solid var(--border2);background:var(--bg);color:var(--text);font-size:15px;font-weight:500;text-align:center;}
+.quality-row{margin-bottom:10px;}
+.quality-row label{font-size:11px;color:var(--text3);display:block;margin-bottom:6px;}
+.quality-pills{display:flex;gap:6px;}
+.qp{flex:1;padding:7px 4px;border-radius:8px;font-size:18px;border:0.5px solid var(--border2);background:var(--bg);cursor:pointer;text-align:center;transition:all 0.12s;}
+.qp.sel{border-color:var(--accent);background:var(--accent-light);}
+.note-row label{font-size:11px;color:var(--text3);display:block;margin-bottom:4px;}
+.note-row input{width:100%;padding:8px 10px;border-radius:var(--radius-sm);border:0.5px solid var(--border2);background:var(--bg);color:var(--text);font-size:13px;}
+.save-sleep-btn{width:100%;margin-top:12px;padding:11px;border-radius:var(--radius-sm);border:none;background:var(--accent);color:#fff;font-size:14px;font-weight:500;cursor:pointer;}
+.sleep-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
+.stat-card{background:var(--bg2);border-radius:var(--radius);border:0.5px solid var(--border);padding:12px 14px;}
+.stat-label{font-size:11px;color:var(--text3);margin-bottom:4px;}
+.stat-val{font-size:22px;font-weight:600;color:var(--text);}
+.stat-unit{font-size:11px;color:var(--text2);}
+.sleep-history-title{font-size:13px;font-weight:500;color:var(--text2);margin-bottom:8px;padding:0 2px;}
+.sleep-record{background:var(--bg2);border-radius:var(--radius);border:0.5px solid var(--border);padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;}
+.sleep-rec-date{font-size:12px;color:var(--text3);width:36px;text-align:center;flex-shrink:0;}
+.sleep-rec-date span{display:block;font-size:18px;font-weight:600;color:var(--text);line-height:1.1;}
+.sleep-rec-info{flex:1;}
+.sleep-rec-dur{font-size:14px;font-weight:500;}
+.sleep-rec-times{font-size:12px;color:var(--text2);margin-top:2px;}
+.sleep-rec-q{font-size:20px;}
+.del-sleep-btn{background:none;border:none;cursor:pointer;color:var(--text3);font-size:16px;padding:4px;}
+.empty-sleep{padding:30px 16px;text-align:center;color:var(--text3);font-size:14px;}
+.chart-wrap{background:var(--bg2);border-radius:var(--radius);border:0.5px solid var(--border);padding:14px;margin-bottom:12px;}
+.chart-title{font-size:12px;color:var(--text2);margin-bottom:10px;}
+.bar-chart{display:flex;align-items:flex-end;gap:4px;height:60px;}
+.bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;}
+.bar{width:100%;border-radius:3px 3px 0 0;background:var(--accent);min-height:3px;transition:height 0.3s;}
+.bar-lbl{font-size:9px;color:var(--text3);}
+</style>
+</head>
+<body>
+
+<div class="page active" id="notes-page">
+  <div class="page-header">
+    <span class="page-title">Тэмдэглэл</span>
+    <button class="icon-btn" onclick="newNote()" aria-label="Шинэ тэмдэглэл">
+      <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </button>
+  </div>
+  <div class="search-bar">
+    <input type="search" placeholder="Хайх..." id="search-in" oninput="renderNotesList()"/>
+  </div>
+  <div class="notes-list" id="notes-list"></div>
+</div>
+
+<div class="page" id="editor-page">
+  <div class="page-header">
+    <button class="back-btn" onclick="backFromEditor()">
+      <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>Буцах
+    </button>
+    <button class="icon-btn" onclick="deleteActiveNote()" style="background:transparent;border:none;" aria-label="Устгах">
+      <svg viewBox="0 0 24 24" style="stroke:var(--danger)"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+    </button>
+  </div>
+  <input class="editor-title" id="ed-title" placeholder="Гарчиг..." oninput="onEditorInput()"/>
+  <textarea class="editor-body" id="ed-body" placeholder="Тэмдэглэлээ энд бичнэ үү..." oninput="onEditorInput()"></textarea>
+</div>
+
+<div class="page" id="meds-page">
+  <div class="page-header"><span class="page-title">Эм уух сануулагч</span></div>
+  <div style="flex:1;overflow-y:auto;">
+    <div id="notif-bar-area"></div>
+    <div class="med-form-card">
+      <label>Эмийн нэр</label>
+      <input id="med-name" placeholder="Жишээ: Д витамин" type="text"/>
+      <label>Цаг</label>
+      <input id="med-time" type="time" value="08:00"/>
+      <label>Давтамж</label>
+      <div class="day-pills" id="day-pills">
+        <span class="dp sel" data-v="every">Өдөр бүр</span>
+        <span class="dp" data-v="0">Да</span><span class="dp" data-v="1">Мя</span>
+        <span class="dp" data-v="2">Лх</span><span class="dp" data-v="3">Пү</span>
+        <span class="dp" data-v="4">Ба</span><span class="dp" data-v="5">Бя</span>
+        <span class="dp" data-v="6">Ня</span>
+      </div>
+      <button class="add-btn" onclick="addMed()">+ Нэмэх</button>
+    </div>
+    <div class="med-list" id="med-list"></div>
+  </div>
+</div>
+
+<!-- Sleep page -->
+<div class="page" id="sleep-page">
+  <div class="page-header"><span class="page-title">Унталт</span></div>
+  <div class="sleep-scroll">
+    <div class="sleep-stats" id="sleep-stats"></div>
+    <div class="chart-wrap" id="sleep-chart-wrap"></div>
+    <div class="sleep-today">
+      <div class="sleep-today-title">Өнөөдрийн унталт нэмэх</div>
+      <div class="sleep-time-row">
+        <div class="sleep-time-block">
+          <label>Унтсан цаг</label>
+          <input type="time" id="sl-start" value="22:30"/>
+        </div>
+        <div class="sleep-time-block">
+          <label>Сэрсэн цаг</label>
+          <input type="time" id="sl-end" value="07:00"/>
+        </div>
+      </div>
+      <div class="quality-row">
+        <label>Чанар</label>
+        <div class="quality-pills" id="quality-pills">
+          <div class="qp" data-q="1" onclick="selQ(1)">😴</div>
+          <div class="qp sel" data-q="2" onclick="selQ(2)">😐</div>
+          <div class="qp" data-q="3" onclick="selQ(3)">🙂</div>
+          <div class="qp" data-q="4" onclick="selQ(4)">😊</div>
+          <div class="qp" data-q="5" onclick="selQ(5)">🤩</div>
+        </div>
+      </div>
+      <div class="note-row">
+        <label>Тэмдэглэл (заавал биш)</label>
+        <input type="text" id="sl-note" placeholder="Жишээ: Маш сайн унтсан..."/>
+      </div>
+      <button class="save-sleep-btn" onclick="saveSleep()">Хадгалах</button>
+    </div>
+    <div class="sleep-history-title">Түүх</div>
+    <div id="sleep-history"></div>
+  </div>
+</div>
+
+<nav class="bottom-nav">
+  <button class="nav-btn active" id="nav-notes" onclick="goPage('notes')">
+    <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+    Тэмдэглэл
+  </button>
+  <button class="nav-btn" id="nav-sleep" onclick="goPage('sleep')">
+    <svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    Унталт
+  </button>
+  <button class="nav-btn" id="nav-meds" onclick="goPage('meds')">
+    <svg viewBox="0 0 24 24"><path d="M10.5 20H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v7"/><path d="M16 19h6"/><path d="M19 16v6"/><circle cx="8" cy="13" r="1"/><circle cx="12" cy="13" r="1"/><circle cx="8" cy="17" r="1"/></svg>
+    Эм
+  </button>
+</nav>
+
+<script>
+let notes=[],meds=[],sleeps=[],activeId=null,selDays=['every'],timers={};
+let notifPerm=('Notification' in window)?Notification.permission:'denied';
+let selQuality=2;
+
+try{notes=JSON.parse(localStorage.getItem('pwa_notes')||'[]');}catch(e){}
+try{meds=JSON.parse(localStorage.getItem('pwa_meds')||'[]');}catch(e){}
+try{sleeps=JSON.parse(localStorage.getItem('pwa_sleeps')||'[]');}catch(e){}
+if(!notes.length) notes=[{id:1,title:'Сайн уу!',body:'Тэмдэглэл нэмэхийн тулд + дарна уу.\n\n"Унталт" табаас унтсан цагаа тэмдэглэ.\n\n"Эм" табаас эм уух сануулагч тохируул.',date:Date.now()}];
+
+function saveN(){try{localStorage.setItem('pwa_notes',JSON.stringify(notes));}catch(e){}}
+function saveM(){try{localStorage.setItem('pwa_meds',JSON.stringify(meds));}catch(e){}}
+function saveSleeps(){try{localStorage.setItem('pwa_sleeps',JSON.stringify(sleeps));}catch(e){}}
+
+function goPage(p){
+  ['notes','sleep','meds','editor'].forEach(id=>{
+    document.getElementById(id+'-page').classList.toggle('active',id===p);
+  });
+  ['notes','sleep','meds'].forEach(id=>{
+    document.getElementById('nav-'+id)?.classList.toggle('active',id===p);
+  });
+  if(p==='notes') renderNotesList();
+  if(p==='meds'){renderMedList();renderNotifBar();}
+  if(p==='sleep'){renderSleepStats();renderSleepChart();renderSleepHistory();}
+}
+
+function newNote(){
+  const n={id:Date.now(),title:'',body:'',date:Date.now()};
+  notes.unshift(n);activeId=n.id;saveN();openEditor(n);
+}
+function openEditor(n){
+  document.getElementById('ed-title').value=n.title;
+  document.getElementById('ed-body').value=n.body;
+  document.getElementById('notes-page').classList.remove('active');
+  document.getElementById('editor-page').classList.add('active');
+  setTimeout(()=>document.getElementById(n.title?'ed-body':'ed-title').focus(),100);
+}
+function backFromEditor(){
+  flushEditor();
+  document.getElementById('editor-page').classList.remove('active');
+  document.getElementById('notes-page').classList.add('active');
+  renderNotesList();
+}
+function flushEditor(){
+  const n=notes.find(x=>x.id===activeId);if(!n)return;
+  n.title=document.getElementById('ed-title').value;
+  n.body=document.getElementById('ed-body').value;
+  n.date=Date.now();saveN();
+}
+function onEditorInput(){flushEditor();}
+function deleteActiveNote(){
+  if(!confirm('Устгах уу?'))return;
+  notes=notes.filter(n=>n.id!==activeId);saveN();backFromEditor();
+}
+function renderNotesList(){
+  const q=(document.getElementById('search-in')?.value||'').toLowerCase();
+  const el=document.getElementById('notes-list');
+  const f=notes.filter(n=>n.title.toLowerCase().includes(q)||n.body.toLowerCase().includes(q));
+  el.innerHTML=f.length?f.map(n=>`
+    <div class="note-card${n.id===activeId?' active':''}" onclick="activeId=${n.id};openEditor(notes.find(x=>x.id===${n.id}))">
+      <div class="note-card-title">${n.title||'Гарчиггүй'}</div>
+      <div class="note-card-preview">${(n.body||'Хоосон...').substring(0,50)}</div>
+    </div>`).join('')
+    :`<div class="empty-notes">Тэмдэглэл байхгүй байна.<br/>+ товч дарж нэмнэ үү.</div>`;
+}
+
+// Sleep functions
+function selQ(q){
+  selQuality=q;
+  document.querySelectorAll('.qp').forEach(el=>el.classList.toggle('sel',parseInt(el.dataset.q)===q));
+}
+
+function calcDur(start,end){
+  const [sh,sm]=start.split(':').map(Number);
+  const [eh,em]=end.split(':').map(Number);
+  let mins=(eh*60+em)-(sh*60+sm);
+  if(mins<0) mins+=24*60;
+  return mins;
+}
+
+function fmtDur(mins){
+  const h=Math.floor(mins/60),m=mins%60;
+  return m>0?`${h}ц ${m}м`:`${h}ц`;
+}
+
+function fmtDate(ts){
+  const d=new Date(ts);
+  return {day:d.getDate(),mon:['1-р','2-р','3-р','4-р','5-р','6-р','7-р','8-р','9-р','10-р','11-р','12-р'][d.getMonth()]};
+}
+
+function saveSleep(){
+  const start=document.getElementById('sl-start').value;
+  const end=document.getElementById('sl-end').value;
+  const note=document.getElementById('sl-note').value.trim();
+  const dur=calcDur(start,end);
+  const rec={id:Date.now(),date:Date.now(),start,end,dur,quality:selQuality,note};
+  sleeps.unshift(rec);
+  if(sleeps.length>60) sleeps=sleeps.slice(0,60);
+  saveSleeps();
+  document.getElementById('sl-note').value='';
+  renderSleepStats();renderSleepChart();renderSleepHistory();
+  const btn=document.querySelector('.save-sleep-btn');
+  btn.textContent='✓ Хадгалагдлаа';btn.style.background='#27ae60';
+  setTimeout(()=>{btn.textContent='Хадгалах';btn.style.background='';},1500);
+}
+
+function delSleep(id){
+  sleeps=sleeps.filter(s=>s.id!==id);saveSleeps();
+  renderSleepStats();renderSleepChart();renderSleepHistory();
+}
+
+function renderSleepStats(){
+  const el=document.getElementById('sleep-stats');if(!el)return;
+  if(!sleeps.length){el.innerHTML='';return;}
+  const avg=Math.round(sleeps.slice(0,7).reduce((a,s)=>a+s.dur,0)/Math.min(sleeps.length,7));
+  const best=sleeps.reduce((a,s)=>s.dur>a.dur?s:a,sleeps[0]);
+  const avgQ=(sleeps.slice(0,7).reduce((a,s)=>a+s.quality,0)/Math.min(sleeps.length,7)).toFixed(1);
+  el.innerHTML=`
+    <div class="stat-card"><div class="stat-label">7 хоногийн дундаж</div><div class="stat-val">${fmtDur(avg)}</div></div>
+    <div class="stat-card"><div class="stat-label">Хамгийн урт</div><div class="stat-val">${fmtDur(best.dur)}</div></div>
+    <div class="stat-card"><div class="stat-label">Дундаж чанар</div><div class="stat-val">${avgQ} <span class="stat-unit">/ 5</span></div></div>
+    <div class="stat-card"><div class="stat-label">Нийт бичлэг</div><div class="stat-val">${sleeps.length} <span class="stat-unit">өдөр</span></div></div>`;
+}
+
+function renderSleepChart(){
+  const el=document.getElementById('sleep-chart-wrap');if(!el)return;
+  const data=sleeps.slice(0,7).reverse();
+  if(!data.length){el.innerHTML='';return;}
+  const max=Math.max(...data.map(s=>s.dur),480);
+  const DAYS=['Ня','Да','Мя','Лх','Пү','Ба','Бя'];
+  el.innerHTML=`<div class="chart-title">Сүүлийн 7 өдрийн унталт</div>
+    <div class="bar-chart">${data.map(s=>{
+      const pct=Math.round((s.dur/max)*60);
+      const d=new Date(s.date);
+      return `<div class="bar-col"><div class="bar" style="height:${pct}px" title="${fmtDur(s.dur)}"></div><div class="bar-lbl">${DAYS[d.getDay()]}</div></div>`;
+    }).join('')}</div>`;
+}
+
+function renderSleepHistory(){
+  const el=document.getElementById('sleep-history');if(!el)return;
+  if(!sleeps.length){
+    el.innerHTML=`<div class="empty-sleep">Унталтын бичлэг байхгүй байна.<br/>Дээрх хэсгээс нэмнэ үү.</div>`;return;
+  }
+  const qEmoji=['','😴','😐','🙂','😊','🤩'];
+  el.innerHTML=sleeps.map(s=>{
+    const fd=fmtDate(s.date);
+    return `<div class="sleep-record">
+      <div class="sleep-rec-date"><span>${fd.day}</span>${fd.mon}</div>
+      <div class="sleep-rec-info">
+        <div class="sleep-rec-dur">${fmtDur(s.dur)}</div>
+        <div class="sleep-rec-times">${s.start} → ${s.end}${s.note?' · '+s.note:''}</div>
+      </div>
+      <div class="sleep-rec-q">${qEmoji[s.quality]}</div>
+      <button class="del-sleep-btn" onclick="delSleep(${s.id})" aria-label="Устгах">✕</button>
+    </div>`;
+  }).join('');
+}
+
+// Medicine
+const DNAMES=['Да','Мя','Лх','Пү','Ба','Бя','Ня'];
+document.querySelectorAll('.dp').forEach(el=>{
+  el.addEventListener('click',()=>{
+    const v=el.dataset.v;
+    if(v==='every'){
+      selDays=['every'];
+      document.querySelectorAll('.dp').forEach(d=>d.classList.toggle('sel',d.dataset.v==='every'));
+    } else {
+      selDays=selDays.filter(x=>x!=='every');
+      el.classList.toggle('sel');
+      selDays=Array.from(document.querySelectorAll('.dp.sel')).map(d=>d.dataset.v);
+      if(!selDays.length){selDays=['every'];document.querySelector('.dp[data-v="every"]').classList.add('sel');}
+    }
+  });
+});
+
+function addMed(){
+  const name=(document.getElementById('med-name').value||'').trim();
+  const time=document.getElementById('med-time').value||'08:00';
+  if(!name){document.getElementById('med-name').focus();return;}
+  const isEvery=selDays.includes('every');
+  const repeat=isEvery?['Өдөр бүр']:selDays.map(v=>DNAMES[parseInt(v)]);
+  meds.push({id:Date.now(),name,time,repeat,active:true});
+  saveM();scheduleAll();renderMedList();
+  document.getElementById('med-name').value='';
+}
+function toggleMed(i){meds[i].active=!meds[i].active;saveM();scheduleAll();renderMedList();}
+function delMed(i){const id=meds[i].id;if(timers[id]){clearTimeout(timers[id]);delete timers[id];}meds.splice(i,1);saveM();scheduleAll();renderMedList();}
+
+function renderMedList(){
+  const el=document.getElementById('med-list');if(!el)return;
+  el.innerHTML=meds.length?meds.map((m,i)=>`
+    <div class="med-card">
+      <div class="med-row">
+        <div class="med-dot${m.active?'':' off'}"></div>
+        <div class="med-info">
+          <div class="med-name-txt">${m.name}</div>
+          <div class="med-time-txt">${m.time}</div>
+          <div class="med-repeat-txt">${m.repeat.join(', ')}</div>
+        </div>
+        <div class="med-actions">
+          <button class="sm-btn" onclick="toggleMed(${i})">
+            ${m.active
+              ?'<svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>'
+              :'<svg viewBox="0 0 24 24"><path d="M13.73 21a2 2 0 0 1-3.46 0"/><line x1="1" y1="1" x2="23" y2="23"/><path d="M17.35 17.35A6 6 0 0 0 18 8"/><path d="M6 8a6 6 0 0 0 1 3.35"/><path d="M6 8H3s3 2 3 9h12"/></svg>'}
+          </button>
+          <button class="sm-btn danger" onclick="delMed(${i})">
+            <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>`).join('')
+    :`<div style="padding:20px;text-align:center;color:var(--text3);font-size:14px;">Сануулагч байхгүй байна</div>`;
+}
+
+function renderNotifBar(){
+  const el=document.getElementById('notif-bar-area');if(!el)return;
+  if(!('Notification' in window)){el.innerHTML='';return;}
+  if(notifPerm==='granted'){
+    el.innerHTML=`<div class="notif-bar notif-ok">✓ Notification идэвхжсэн байна</div>`;
+  } else if(notifPerm==='denied'){
+    el.innerHTML=`<div class="notif-bar">Notification хаагдсан. Утасны тохиргооноос зөвшөөрнө үү.</div>`;
+  } else {
+    el.innerHTML=`<div class="notif-bar">Сануулга авахын тулд зөвшөөрөл өгнө үү. <button onclick="reqPerm()">Зөвшөөрөх</button></div>`;
+  }
+}
+function reqPerm(){Notification.requestPermission().then(p=>{notifPerm=p;renderNotifBar();});}
+
+function scheduleAll(){
+  Object.values(timers).forEach(clearTimeout);timers={};
+  if(!('Notification' in window))return;
+  const now=new Date();
+  meds.filter(m=>m.active).forEach(m=>{
+    const [h,min]=m.time.split(':').map(Number);
+    const next=new Date();next.setHours(h,min,0,0);
+    if(next<=now) next.setDate(next.getDate()+1);
+    const dayMap=['Ня','Да','Мя','Лх','Пү','Ба','Бя'];
+    const isEvery=m.repeat.includes('Өдөр бүр');
+    if(!isEvery&&!m.repeat.includes(dayMap[next.getDay()]))return;
+    timers[m.id]=setTimeout(()=>{
+      if(Notification.permission==='granted'){
+        new Notification('💊 Эм уух цаг боллоо!',{body:`${m.name} уух цаг боллоо (${m.time})`});
+      }
+      scheduleAll();
+    },next-now);
+  });
+}
+
+if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+renderNotesList();
+scheduleAll();
+</script>
+</body>
+</html>
